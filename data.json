@@ -1,0 +1,63 @@
+{
+  "produtos": [
+    {
+      "id": "prod1",
+      "nome": "Mezcla",
+      "volume": "1,5L",
+      "em_destaque": true,
+      "imagem_url": "https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/Paviloche_Classico_mezcla.png.webp"
+    },
+    {
+      "id": "prod2",
+      "nome": "Coco",
+      "volume": "1,5L",
+      "em_destaque": true,
+      "imagem_url": "https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/Paviloche_ed.limitada_coco-1.png.webp"
+    },
+    {
+      "id": "prod3",
+      "nome": "Napolitano",
+      "volume": "500ml",
+      "em_destaque": false,
+      "imagem_url": "https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/Paviloche_Zero_acucar_napolitano.png.webp"
+    }
+  ],
+  "pontos_de_venda": [
+    {
+      "id": "pdv1",
+      "nome": "Mercado Central Joinville",
+      "cep": "89201-001",
+      "endereco": "Rua das Palmeiras, 100",
+      "latitude": -26.30561,
+      "longitude": -48.84646,
+      "produtos_disponiveis": ["prod1", "prod2"]
+    },
+    {
+      "id": "pdv2",
+      "nome": "Loja Conveniência Centro",
+      "cep": "89202-002",
+      "endereco": "Av. Brasil, 500",
+      "latitude": -26.30000,
+      "longitude": -48.85000,
+      "produtos_disponiveis": ["prod1", "prod3"]
+    },
+    {
+      "id": "pdv3",
+      "nome": "Padaria da Zona Sul",
+      "cep": "89203-003",
+      "endereco": "Rua XV de Novembro, 1500",
+      "latitude": -26.29500,
+      "longitude": -48.84000,
+      "produtos_disponiveis": ["prod2", "prod3"]
+    },
+    {
+        "id": "pdv4",
+        "nome": "Supermercado Aventureiro",
+        "cep": "89226-000",
+        "endereco": "Rua Tuiuti, 2000",
+        "latitude": -26.23000,
+        "longitude": -48.81000,
+        "produtos_disponiveis": ["prod1", "prod2", "prod3"]
+    }
+  ]
+}
