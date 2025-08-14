@@ -1,0 +1,53 @@
+﻿id;nome; volume ; em_destaque ;imagem_url
+91716;BANANA CARAMELIZADA EDIÇÃO LTDA ; 1 L ; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/Paviloche_ed.png.webp
+91718; PASSAS AO RUM EDIÇÃO LTDA ; 1 L ; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/Paviloche_ed-1.png.webp
+91715;COCO EDIÇÃO LTDA ; 1 L ; TRUE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/Paviloche_ed.limitada_coco-1.png.webp
+91719;PAPAIA COM CASSIS EDIÇÃO LTDA ; 1 L ; TRUE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2025/04/Paviloche_ed.limitada_papaia_com_cassis.png.webp
+04210;ABACAXI FRANCES GELATO  ;1,5 L; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/Paviloche_Gelato_abacaxi_frances.png.webp
+04208; IOGURTE GREGO GELATO    ;1,5 L; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/Paviloche_Gelato_iogurte_grego.png.webp
+04209; CHANTILLY TRUFADO GELATO;1,5 L; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/Paviloche_Gelato_chantilly_trufado.png.webp
+04206; MENTA CHIPS GELATO ;1,5 L; TRUE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2023/12/Paviloche_Gelato_menta_chips.png.webp
+04207; CHOCONUT GELATO;1,5 L; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2023/12/Paviloche_Gelato_choconut-1.png.webp
+91710;DOCE DE LEITE PREMIUM    ; 1 L ; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/Paviloche_Premium_doce_de_leite.png.webp
+91712;GRAN CHOCOLATE PREMIUM  ; 1 L ; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/Paviloche_Premium_gran_chocolate.png.webp
+91711; IOGURTE C/AMARENA PREMIUM; 1 L ; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/Paviloche_Premium_iogurte_com_amarena.png.webp
+91714;NOZES PREMIUM            ; 1 L ; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/Paviloche_Premium_nozes.png.webp
+91245;LEITINHO TRUFADO CLÁSSICOS;1,5 L; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2021/11/Paviloche_Classico_leitinho_trufado.png.webp
+91242;FLOCOS CLÁSSICOS;1,5 L; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/Paviloche_Classico_flocos.png.webp
+91243;CREME CLÁSSICOS;1,5 L; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/Paviloche_Classico_creme.png.webp
+91248;CHOCOLATE CLÁSSICOS;1,5 L; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/Paviloche_Classico_chocolate.png.webp
+91241;NAPOLITANO CLÁSSICOS;1,5 L; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/Paviloche_Classico_napolitano.png.webp
+91244;MORANGO CLÁSSICOS;1,5 L; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/Paviloche_Classico_morango.png.webp
+91240;MEZCLA CLÁSSICOS;1,5 L; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/Paviloche_Classico_mezcla.png.webp
+01622;DOCE DE LEITE ZERO AÇÚCAR ;500 ML; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/Paviloche_zero_acucar_dulce_de_leche.png.webp
+01623;NAPOLITANO ZERO AÇÚCAR;500 ML; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/Paviloche_Zero_acucar_napolitano.png.webp
+91510;PIC. GRAN AMENDOAS  ;70G; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2021/11/picole_gran_amendoas_paviloche.png.webp
+91511;PIC. GRAN COOKIES E CREAM;70G; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2021/11/picole_gran_cookies_paviloche.png.webp
+91512;PIC. GRAN TRES CHOCOLATES;70G; TRUE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/picole_gran_tres_chocolates_paviloche.png.webp
+91420;PIC. COCO LIGHT;60G; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/Picole_paviloche_creme_coco_zero.png.webp
+91502;PIC. MINI PAVISSIMO TRUFA ;60G; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/picole_paviloche_pavissimo_mini_trufa.png.webp
+91500;PIC. PAVISSIMO ABACAXI FRANCES;85G; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/picole_paviloche_pavissimo_abacaxi_frances.png.webp
+91501;PIC. PAVISSIMO CHOCOLATE SUIÇO;85G; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/picole_paviloche_pavissimo_chocolate_suico.png.webp
+91505;PIC. PAVISSIMO MARTA ROCHA;85G; TRUE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/picole_paviloche_pavissimo_marta_rocha.png.webp
+01446;CONE PAVETTO PROFITEROLES ;80G; TRUE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/cone_pavetto_paviloche_profiteroles.png.webp
+01444;CONE PAVETTO UNIPOP ;80G; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/cone_pavetto_paviloche_unipop.png.webp
+01447;CONE PAVETTO TENTACÃO;80G; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/cone_pavetto_paviloche_tentacao.png.webp
+91406;PIC. COBERTURA  BRIGADEIRO;65G; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/picole_cobertura_brigadeiro_paviloche.png.webp
+91421;PIC. COBERTURA  TORPEDO ;65G; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/picole_cobertura_petit_gateau_paviloche-1.png.webp
+91434;PIC. COBERTURA  TABLEK;65G; TRUE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/picole_cobertura_tablek_paviloche.png.webp
+91444;PIC. COBERTURA  PETIT GATEAU;72G; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/picole_cobertura_petit_gateau_paviloche.png.webp
+91429;PIC. DOCE DE LEITE TIROL;65G; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/Picole_paviloche_creme_doce_de_leite.png.webp
+91449;PIC. GRAN CHOCOLATE;80G; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/picole_cobertura_granchocolate_paviloche.png.webp
+91401;PIC. CREME COCO     ;60G; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/Picole_paviloche_creme_coco.png.webp
+91428;PIC. CREME LEITINHO    ;60G; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/Picole_paviloche_creme_leitinho.png.webp
+91413;PIC. CREME CHOCOLEITE     ;60G; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/Picole_paviloche_creme_chocoleite.png.webp
+91417;PIC. CREME MILHO VERDE    ;60G; TRUE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/Picole_paviloche_creme_milho_verde.png.webp
+91402;PIC. FRUTA UVA       ;57G; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/Picole_paviloche_fruta_uva.png.webp
+91403;PIC. FRUTA LIMÃO    ;57G; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/Picole_paviloche_fruta_limao.png.webp
+91411;PIC. FRUTA ABACAXI    ;57G; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/Picole_paviloche_fruta_abacaxi.png.webp
+91419;PIC. FRUTA MORANGO    ;57G; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/Picole_paviloche_fruta_morango-1.png.webp
+91448;PIC. KIDS UNIPOP       ;65G; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/Picole_paviloche_kids_unipop.png.webp
+91409;PIC. KIDS PAVILÉ     ;60G; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/Picole_paviloche_kids_pavile-2.png.webp
+91410;PIC. KIDS ALGODÃO DOCE     ;60G; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/Picole_paviloche_kids_algodao_doce.png.webp
+91423;PIC. KIDS RABISCO BRANCO      ;40G; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/Picole_paviloche_kids_rabisco_chocolate_branco.png.webp
+91425;PIC. KIDS RABISCO PRETO  ;40G; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/Picole_paviloche_kids_rabisco_chocolate_preto.png.webp
