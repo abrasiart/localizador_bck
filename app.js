@@ -247,3 +247,37 @@ app.get('/health', (_, res) => res.json({ ok: true }));
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
 });
+
+// Geocodificação reversa via backend (usa OPENCAGE_KEY do ambiente)
+app.get('/geocode/reverse', async (req, res) => {
+  const lat = String(req.query.lat ?? '').trim();
+  const lon = String(req.query.lon ?? '').trim();
+  const KEY = process.env.OPENCAGE_KEY;
+
+  if (!lat || !lon) {
+    return res.status(400).json({ erro: 'Parâmetros lat e lon são obrigatórios.' });
+  }
+  if (!KEY) {
+    return res.status(500).json({ erro: 'OPENCAGE_KEY não configurada no servidor.' });
+  }
+
+  try {
+    const url = `https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(lat)}+${encodeURIComponent(lon)}&key=${KEY}&pretty=0&no_annotations=1`;
+    const r = await fetch(url);
+    if (!r.ok) {
+      return res.status(502).json({ erro: `OpenCage HTTP ${r.status}` });
+    }
+    const j = await r.json();
+    const first = j?.results?.[0];
+
+    // Devolvemos um payload simples e útil para o front
+    return res.json({
+      formatted: first?.formatted || `${Number(lat).toFixed(4)}, ${Number(lon).toFixed(4)}`,
+      components: first?.components || null,
+    });
+  } catch (e) {
+    console.error('Reverse geocode error:', e);
+    return res.status(500).json({ erro: 'Falha ao geocodificar reverso.' });
+  }
+});
+
