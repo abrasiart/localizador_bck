@@ -70,46 +70,50 @@ function loadPdvsMap() {
 // Produtos em destaque
 app.get('/produtos/destaque', (req, res) => {
   const results = [];
-  fs.createReadStream(PRODUCTS_FILE)
-    .pipe(csv({ separator: ';', mapHeaders: ({ header }) => header.trim() }))
+  fs.createReadStream(path.join(__dirname, 'produtos.csv'))
+    .pipe(csv({ separator: ';' }))
     .on('data', (row) => {
-      if (toBool(row.em_destaque)) {
+      const emDestaque = String(row.em_destaque || '').trim().toLowerCase() === 'true';
+      if (emDestaque) {
         results.push({
-          id: String(row.id ?? '').trim(),
-          nome: (row.nome ?? '').trim(),
-          volume: (row['volume'] ?? row.vol ?? '').trim(),
-          em_destaque: true,
-          imagem_url: (row.imagem_url ?? row.image_url ?? row.imagem ?? '').trim(),
+          id: row.id,
+          nome: row.nome,
+          volume: row.volume,
+          em_destaque: emDestaque,
+          imagem_url: row.imagem_url,
+          produto_url: row.produto_url || null, // ← novo
         });
       }
     })
-    .on('end', () => res.json(results))
-    .on('error', (e) => res.status(500).json({ erro: e.message }));
+    .on('end', () => res.json(results));
 });
+
 
 // Buscar produtos por nome
 app.get('/produtos/buscar', (req, res) => {
-  const q = String(req.query.q ?? '').trim().toLowerCase();
+  const q = (req.query.q || '').toString().toLowerCase();
   if (!q) return res.status(400).json({ erro: 'Termo de busca é obrigatório.' });
 
   const results = [];
-  fs.createReadStream(PRODUCTS_FILE)
-    .pipe(csv({ separator: ';', mapHeaders: ({ header }) => header.trim() }))
+  fs.createReadStream(path.join(__dirname, 'produtos.csv'))
+    .pipe(csv({ separator: ';' }))
     .on('data', (row) => {
-      const nome = String(row.nome ?? '').trim();
+      const nome = (row.nome || '').toString();
       if (nome.toLowerCase().includes(q)) {
+        const emDestaque = String(row.em_destaque || '').trim().toLowerCase() === 'true';
         results.push({
-          id: String(row.id ?? '').trim(),
-          nome,
-          volume: (row['volume'] ?? row.vol ?? '').trim(),
-          em_destaque: toBool(row.em_destaque),
-          imagem_url: (row.imagem_url ?? row.image_url ?? row.imagem ?? '').trim(),
+          id: row.id,
+          nome: row.nome,
+          volume: row.volume,
+          em_destaque: emDestaque,
+          imagem_url: row.imagem_url,
+          produto_url: row.produto_url || null, // ← novo
         });
       }
     })
-    .on('end', () => res.json(results))
-    .on('error', (e) => res.status(500).json({ erro: e.message }));
+    .on('end', () => res.json(results));
 });
+
 
 // PDVs próximos por CEP
 app.get('/pdvs/proximos', async (req, res) => {
