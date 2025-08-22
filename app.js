@@ -5,6 +5,46 @@ const fs = require('fs');
 const csv = require('csv-parser');
 const fetch = require('node-fetch');
 
+const CSV_SEP = ';';
+
+// normaliza chaves e valores de uma linha do CSV
+function normalizeRow(row) {
+  const out = {};
+  for (const [k, v] of Object.entries(row)) {
+    const key = String(k).trim().toLowerCase(); // tira espaços e padroniza
+    out[key] = typeof v === 'string' ? v.trim() : v; // remove espaços em volta do valor
+  }
+  return out;
+}
+
+function toBool(x) {
+  const v = String(x ?? '').trim().toLowerCase();
+  return v === 'true' || v === '1' || v === 'sim' || v === 'yes';
+}
+
+// carrega todos os produtos do CSV, já normalizados
+function loadProductsCsv() {
+  return new Promise((resolve, reject) => {
+    const items = [];
+    fs.createReadStream(path.join(__dirname, 'produtos.csv'))
+      .pipe(csv({ separator: CSV_SEP }))
+      .on('data', (raw) => {
+        const r = normalizeRow(raw);
+        items.push({
+          id: r.id,
+          nome: r.nome,
+          volume: r.volume || '',
+          em_destaque: toBool(r['em_destaque']),
+          imagem_url: r['imagem_url'],
+          produto_url: r['produto_url'] || null, // nova coluna (opcional)
+        });
+      })
+      .on('end', () => resolve(items))
+      .on('error', reject);
+  });
+}
+
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
