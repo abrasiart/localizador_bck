@@ -5,14 +5,24 @@ const fs = require('fs');
 const csv = require('csv-parser');
 const fetch = require('node-fetch');
 
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+app.use(cors());
+app.use(express.json());
+
+// ---------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------
 const CSV_SEP = ';';
 
-// normaliza chaves e valores de uma linha do CSV
+// normaliza chaves/valores de uma linha do CSV
 function normalizeRow(row) {
   const out = {};
   for (const [k, v] of Object.entries(row)) {
-    const key = String(k).trim().toLowerCase(); // tira espaços e padroniza
-    out[key] = typeof v === 'string' ? v.trim() : v; // remove espaços em volta do valor
+    let key = String(k).trim().toLowerCase();
+    key = key.replace(/^\uFEFF/, ''); // remove BOM se houver
+    out[key] = typeof v === 'string' ? v.trim() : v;
   }
   return out;
 }
@@ -22,41 +32,11 @@ function toBool(x) {
   return v === 'true' || v === '1' || v === 'sim' || v === 'yes';
 }
 
-// carrega todos os produtos do CSV, já normalizados
-function loadProductsCsv() {
-  return new Promise((resolve, reject) => {
-    const items = [];
-    fs.createReadStream(path.join(__dirname, 'produtos.csv'))
-      .pipe(csv({ separator: CSV_SEP }))
-      .on('data', (raw) => {
-        const r = normalizeRow(raw);
-        items.push({
-          id: r.id,
-          nome: r.nome,
-          volume: r.volume || '',
-          em_destaque: toBool(r['em_destaque']),
-          imagem_url: r['imagem_url'],
-          produto_url: r['produto_url'] || null, // nova coluna (opcional)
-        });
-      })
-      .on('end', () => resolve(items))
-      .on('error', reject);
-  });
+function toNum(x) {
+  if (x == null) return NaN;
+  return parseFloat(String(x).replace(',', '.'));
 }
 
-
-const app = express();
-const PORT = process.env.PORT || 5000;
-
-app.use(cors());
-app.use(express.json());
-
-// Arquivos
-const PRODUCTS_FILE = path.join(__dirname, 'produtos.csv');
-const PDVS_FILE = path.join(__dirname, 'pontos_de_venda_final.csv');
-const PDV_PROD_FILE = path.join(__dirname, 'pdv_produtos_filtrado_final.csv');
-
-// Helpers
 function calculateDistance(lat1, lon1, lat2, lon2) {
   const R = 6371;
   const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -69,23 +49,43 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
   return R * c;
 }
 
-function toBool(v) {
-  const s = String(v ?? '').trim().toUpperCase();
-  return s === 'TRUE' || s === '1' || s === 'T' || s === 'SIM';
+// ---------------------------------------------------------------------
+// Caminhos dos arquivos CSV
+// (estão na raiz do projeto no Railway)
+// ---------------------------------------------------------------------
+const PRODUCTS_FILE = path.join(__dirname, 'produtos.csv');
+const PDVS_FILE = path.join(__dirname, 'pontos_de_venda_final.csv');
+const PDV_PROD_FILE = path.join(__dirname, 'pdv_produtos_filtrado_final.csv');
+
+// ---------------------------------------------------------------------
+// Leitura dos CSVs
+// ---------------------------------------------------------------------
+function loadProductsCsv() {
+  return new Promise((resolve, reject) => {
+    const items = [];
+    fs.createReadStream(PRODUCTS_FILE)
+      .pipe(csv({ separator: CSV_SEP }))
+      .on('data', raw => {
+        const r = normalizeRow(raw);
+        items.push({
+          id: r.id,
+          nome: r.nome,
+          volume: r.volume || '',
+          em_destaque: toBool(r['em_destaque']),
+          imagem_url: r['imagem_url'],
+          produto_url: r['produto_url'] || null,
+        });
+      })
+      .on('end', () => resolve(items))
+      .on('error', reject);
+  });
 }
 
-function toNum(x) {
-  if (x == null) return NaN;
-  // CSV já está com ponto como separador decimal
-  return parseFloat(String(x).replace(',', '.'));
-}
-
-// Carrega e indexa todos os PDVs (id -> dados do PDV)
 function loadPdvsMap() {
   return new Promise((resolve, reject) => {
     const map = new Map();
     fs.createReadStream(PDVS_FILE)
-      .pipe(csv({ separator: ';', mapHeaders: ({ header }) => header.trim() }))
+      .pipe(csv({ separator: CSV_SEP, mapHeaders: ({ header }) => header.trim() }))
       .on('data', (row) => {
         const id = String(row.id ?? row.pdv_id ?? '').trim();
         if (!id) return;
@@ -105,20 +105,24 @@ function loadPdvsMap() {
   });
 }
 
-// ---------- ROTAS ----------
+// ---------------------------------------------------------------------
+// Rotas
+// ---------------------------------------------------------------------
+
+// Healthcheck
+app.get('/health', (_, res) => res.json({ ok: true }));
 
 // Produtos em destaque
 app.get('/produtos/destaque', async (req, res) => {
   try {
     const all = await loadProductsCsv();
     const destacados = all.filter(p => p.em_destaque);
-    return res.json(destaques);
+    return res.json(destacados); // <- AQUI estava o bug: retornava "destaques"
   } catch (e) {
     console.error('Erro /produtos/destaque:', e);
     return res.status(500).json({ erro: 'Falha ao ler produtos.' });
   }
 });
-
 
 // Buscar produtos por nome
 app.get('/produtos/buscar', async (req, res) => {
@@ -135,8 +139,6 @@ app.get('/produtos/buscar', async (req, res) => {
   }
 });
 
-
-
 // PDVs próximos por CEP
 app.get('/pdvs/proximos', async (req, res) => {
   const userCep = String(req.query.cep ?? '').replace(/\D/g, '');
@@ -144,166 +146,4 @@ app.get('/pdvs/proximos', async (req, res) => {
 
   try {
     const r = await fetch(`https://cep.awesomeapi.com.br/json/${userCep}`);
-    const j = await r.json();
-    if (!j.lat || !j.lng) return res.status(404).json({ erro: 'CEP não encontrado.' });
-
-    const userLat = parseFloat(j.lat);
-    const userLon = parseFloat(j.lng);
-
-    const out = [];
-    fs.createReadStream(PDVS_FILE)
-      .pipe(csv({ separator: ';', mapHeaders: ({ header }) => header.trim() }))
-      .on('data', (row) => {
-        const lat = toNum(row.latitude);
-        const lon = toNum(row.longitude);
-        if (isFinite(lat) && isFinite(lon)) {
-          const distancia = calculateDistance(userLat, userLon, lat, lon);
-          out.push({
-            id: String(row.id ?? row.pdv_id ?? '').trim(),
-            nome: (row.nome ?? '').trim(),
-            cep: (row.cep ?? '').trim(),
-            endereco: (row.endereco ?? '').trim(),
-            latitude: lat,
-            longitude: lon,
-            distancia_km: +distancia.toFixed(2),
-          });
-        }
-      })
-      .on('end', () => {
-        out.sort((a, b) => a.distancia_km - b.distancia_km);
-        res.json(out);
-      })
-      .on('error', (e) => res.status(500).json({ erro: e.message }));
-  } catch (e) {
-    res.status(500).json({ erro: 'Erro ao buscar coordenadas do CEP.' });
-  }
-});
-
-// PDVs próximos por coordenadas
-app.get('/pdvs/proximos/coords', (req, res) => {
-  const userLat = toNum(req.query.lat);
-  const userLon = toNum(req.query.lon);
-  if (!isFinite(userLat) || !isFinite(userLon)) {
-    return res.status(400).json({ erro: 'Coordenadas inválidas.' });
-  }
-
-  const out = [];
-  fs.createReadStream(PDVS_FILE)
-    .pipe(csv({ separator: ';', mapHeaders: ({ header }) => header.trim() }))
-    .on('data', (row) => {
-      const lat = toNum(row.latitude);
-      const lon = toNum(row.longitude);
-      if (isFinite(lat) && isFinite(lon)) {
-        const distancia = calculateDistance(userLat, userLon, lat, lon);
-        out.push({
-          id: String(row.id ?? row.pdv_id ?? '').trim(),
-          nome: (row.nome ?? '').trim(),
-          cep: (row.cep ?? '').trim(),
-          endereco: (row.endereco ?? '').trim(),
-          latitude: lat,
-          longitude: lon,
-          distancia_km: +distancia.toFixed(2),
-        });
-      }
-    })
-    .on('end', () => {
-      out.sort((a, b) => a.distancia_km - b.distancia_km);
-      res.json(out);
-    })
-    .on('error', (e) => res.status(500).json({ erro: e.message }));
-});
-
-// PDVs por produto + coordenadas (JOIN pdv_produtos -> pontos_de_venda)
-app.get('/pdvs/proximos/produto', async (req, res) => {
-  const productIdRaw = String(req.query.productId ?? '').trim();
-  const userLat = toNum(req.query.lat);
-  const userLon = toNum(req.query.lon);
-
-  if (!productIdRaw || !isFinite(userLat) || !isFinite(userLon)) {
-    return res.status(400).json({ erro: 'Parâmetros inválidos.' });
-  }
-
-  // candidatos: id enviado e variações 9xxxx <-> 0xxxx
-  const candidates = new Set([productIdRaw]);
-  if (/^\d{5}$/.test(productIdRaw)) {
-    if (productIdRaw.startsWith('9')) candidates.add('0' + productIdRaw.slice(1));
-    if (productIdRaw.startsWith('0')) candidates.add('9' + productIdRaw.slice(1));
-  }
-
-  try {
-    const pdvMap = await loadPdvsMap();
-    const out = [];
-
-    fs.createReadStream(PDV_PROD_FILE)
-      .pipe(csv({ separator: ';', mapHeaders: ({ header }) => header.trim() }))
-      .on('data', (row) => {
-        const pid = String(row.produto_id ?? '').trim();
-        if (!candidates.has(pid)) return;
-
-        const pdvId = String(row.pdv_id ?? row.id ?? '').trim();
-        const pdv = pdvMap.get(pdvId);
-        if (!pdv) return;
-
-        const { latitude, longitude } = pdv;
-        if (!isFinite(latitude) || !isFinite(longitude)) return;
-
-        const distancia = calculateDistance(userLat, userLon, latitude, longitude);
-        out.push({
-          id: pdv.id,
-          nome: pdv.nome,
-          cep: pdv.cep,
-          endereco: pdv.endereco,
-          latitude,
-          longitude,
-          distancia_km: +distancia.toFixed(2),
-        });
-      })
-      .on('end', () => {
-        out.sort((a, b) => a.distancia_km - b.distancia_km);
-        res.json(out);
-      })
-      .on('error', (e) => res.status(500).json({ erro: e.message }));
-  } catch (e) {
-    res.status(500).json({ erro: e.message });
-  }
-});
-
-app.get('/health', (_, res) => res.json({ ok: true }));
-
-app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
-});
-
-// Geocodificação reversa via backend (usa OPENCAGE_KEY do ambiente)
-app.get('/geocode/reverse', async (req, res) => {
-  const lat = String(req.query.lat ?? '').trim();
-  const lon = String(req.query.lon ?? '').trim();
-  const KEY = process.env.OPENCAGE_KEY;
-
-  if (!lat || !lon) {
-    return res.status(400).json({ erro: 'Parâmetros lat e lon são obrigatórios.' });
-  }
-  if (!KEY) {
-    return res.status(500).json({ erro: 'OPENCAGE_KEY não configurada no servidor.' });
-  }
-
-  try {
-    const url = `https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(lat)}+${encodeURIComponent(lon)}&key=${KEY}&pretty=0&no_annotations=1`;
-    const r = await fetch(url);
-    if (!r.ok) {
-      return res.status(502).json({ erro: `OpenCage HTTP ${r.status}` });
-    }
-    const j = await r.json();
-    const first = j?.results?.[0];
-
-    // Devolvemos um payload simples e útil para o front
-    return res.json({
-      formatted: first?.formatted || `${Number(lat).toFixed(4)}, ${Number(lon).toFixed(4)}`,
-      components: first?.components || null,
-    });
-  } catch (e) {
-    console.error('Reverse geocode error:', e);
-    return res.status(500).json({ erro: 'Falha ao geocodificar reverso.' });
-  }
-});
-
+    const j = await r.json()
