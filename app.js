@@ -108,51 +108,33 @@ function loadPdvsMap() {
 // ---------- ROTAS ----------
 
 // Produtos em destaque
-app.get('/produtos/destaque', (req, res) => {
-  const results = [];
-  fs.createReadStream(path.join(__dirname, 'produtos.csv'))
-    .pipe(csv({ separator: ';' }))
-    .on('data', (row) => {
-      const emDestaque = String(row.em_destaque || '').trim().toLowerCase() === 'true';
-      if (emDestaque) {
-        results.push({
-          id: row.id,
-          nome: row.nome,
-          volume: row.volume,
-          em_destaque: emDestaque,
-          imagem_url: row.imagem_url,
-          produto_url: row.produto_url || null, // ← novo
-        });
-      }
-    })
-    .on('end', () => res.json(results));
+app.get('/produtos/destaque', async (req, res) => {
+  try {
+    const all = await loadProductsCsv();
+    const destacados = all.filter(p => p.em_destaque);
+    return res.json(destaques);
+  } catch (e) {
+    console.error('Erro /produtos/destaque:', e);
+    return res.status(500).json({ erro: 'Falha ao ler produtos.' });
+  }
 });
 
 
 // Buscar produtos por nome
-app.get('/produtos/buscar', (req, res) => {
-  const q = (req.query.q || '').toString().toLowerCase();
-  if (!q) return res.status(400).json({ erro: 'Termo de busca é obrigatório.' });
+app.get('/produtos/buscar', async (req, res) => {
+  try {
+    const q = String(req.query.q ?? '').toLowerCase();
+    if (!q) return res.status(400).json({ erro: 'Termo de busca é obrigatório.' });
 
-  const results = [];
-  fs.createReadStream(path.join(__dirname, 'produtos.csv'))
-    .pipe(csv({ separator: ';' }))
-    .on('data', (row) => {
-      const nome = (row.nome || '').toString();
-      if (nome.toLowerCase().includes(q)) {
-        const emDestaque = String(row.em_destaque || '').trim().toLowerCase() === 'true';
-        results.push({
-          id: row.id,
-          nome: row.nome,
-          volume: row.volume,
-          em_destaque: emDestaque,
-          imagem_url: row.imagem_url,
-          produto_url: row.produto_url || null, // ← novo
-        });
-      }
-    })
-    .on('end', () => res.json(results));
+    const all = await loadProductsCsv();
+    const results = all.filter(p => (p.nome || '').toLowerCase().includes(q));
+    return res.json(results);
+  } catch (e) {
+    console.error('Erro /produtos/buscar:', e);
+    return res.status(500).json({ erro: 'Falha ao buscar produtos.' });
+  }
 });
+
 
 
 // PDVs próximos por CEP
