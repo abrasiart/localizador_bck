@@ -146,4 +146,165 @@ app.get('/pdvs/proximos', async (req, res) => {
 
   try {
     const r = await fetch(`https://cep.awesomeapi.com.br/json/${userCep}`);
-    const j = await r.json()
+    const j = await r.json();
+    if (!j.lat || !j.lng) return res.status(404).json({ erro: 'CEP não encontrado.' });
+
+    const userLat = parseFloat(j.lat);
+    const userLon = parseFloat(j.lng);
+
+    const out = [];
+    fs.createReadStream(PDVS_FILE)
+      .pipe(csv({ separator: CSV_SEP, mapHeaders: ({ header }) => header.trim() }))
+      .on('data', (row) => {
+        const lat = toNum(row.latitude);
+        const lon = toNum(row.longitude);
+        if (isFinite(lat) && isFinite(lon)) {
+          const distancia = calculateDistance(userLat, userLon, lat, lon);
+          out.push({
+            id: String(row.id ?? row.pdv_id ?? '').trim(),
+            nome: (row.nome ?? '').trim(),
+            cep: (row.cep ?? '').trim(),
+            endereco: (row.endereco ?? '').trim(),
+            latitude: lat,
+            longitude: lon,
+            distancia_km: +distancia.toFixed(2),
+          });
+        }
+      })
+      .on('end', () => {
+        out.sort((a, b) => a.distancia_km - b.distancia_km);
+        res.json(out);
+      })
+      .on('error', (e) => res.status(500).json({ erro: e.message }));
+  } catch (e) {
+    console.error('Erro CEP:', e);
+    res.status(500).json({ erro: 'Erro ao buscar coordenadas do CEP.' });
+  }
+});
+
+// PDVs próximos por coordenadas
+app.get('/pdvs/proximos/coords', (req, res) => {
+  const userLat = toNum(req.query.lat);
+  const userLon = toNum(req.query.lon);
+  if (!isFinite(userLat) || !isFinite(userLon)) {
+    return res.status(400).json({ erro: 'Coordenadas inválidas.' });
+  }
+
+  const out = [];
+  fs.createReadStream(PDVS_FILE)
+    .pipe(csv({ separator: CSV_SEP, mapHeaders: ({ header }) => header.trim() }))
+    .on('data', (row) => {
+      const lat = toNum(row.latitude);
+      const lon = toNum(row.longitude);
+      if (isFinite(lat) && isFinite(lon)) {
+        const distancia = calculateDistance(userLat, userLon, lat, lon);
+        out.push({
+          id: String(row.id ?? row.pdv_id ?? '').trim(),
+          nome: (row.nome ?? '').trim(),
+          cep: (row.cep ?? '').trim(),
+          endereco: (row.endereco ?? '').trim(),
+          latitude: lat,
+          longitude: lon,
+          distancia_km: +distancia.toFixed(2),
+        });
+      }
+    })
+    .on('end', () => {
+      out.sort((a, b) => a.distancia_km - b.distancia_km);
+      res.json(out);
+    })
+    .on('error', (e) => res.status(500).json({ erro: e.message }));
+});
+
+// PDVs por produto + coordenadas
+app.get('/pdvs/proximos/produto', async (req, res) => {
+  const productIdRaw = String(req.query.productId ?? '').trim();
+  const userLat = toNum(req.query.lat);
+  const userLon = toNum(req.query.lon);
+
+  if (!productIdRaw || !isFinite(userLat) || !isFinite(userLon)) {
+    return res.status(400).json({ erro: 'Parâmetros inválidos.' });
+  }
+
+  // candidatos: id enviado e variações 9xxxx <-> 0xxxx
+  const candidates = new Set([productIdRaw]);
+  if (/^\d{5}$/.test(productIdRaw)) {
+    if (productIdRaw.startsWith('9')) candidates.add('0' + productIdRaw.slice(1));
+    if (productIdRaw.startsWith('0')) candidates.add('9' + productIdRaw.slice(1));
+  }
+
+  try {
+    const pdvMap = await loadPdvsMap();
+    const out = [];
+
+    fs.createReadStream(PDV_PROD_FILE)
+      .pipe(csv({ separator: CSV_SEP, mapHeaders: ({ header }) => header.trim() }))
+      .on('data', (row) => {
+        const pid = String(row.produto_id ?? '').trim();
+        if (!candidates.has(pid)) return;
+
+        const pdvId = String(row.pdv_id ?? row.id ?? '').trim();
+        const pdv = pdvMap.get(pdvId);
+        if (!pdv) return;
+
+        const { latitude, longitude } = pdv;
+        if (!isFinite(latitude) || !isFinite(longitude)) return;
+
+        const distancia = calculateDistance(userLat, userLon, latitude, longitude);
+        out.push({
+          id: pdv.id,
+          nome: pdv.nome,
+          cep: pdv.cep,
+          endereco: pdv.endereco,
+          latitude,
+          longitude,
+          distancia_km: +distancia.toFixed(2),
+        });
+      })
+      .on('end', () => {
+        out.sort((a, b) => a.distancia_km - b.distancia_km);
+        res.json(out);
+      })
+      .on('error', (e) => res.status(500).json({ erro: e.message }));
+  } catch (e) {
+    console.error('Erro /pdvs/proximos/produto:', e);
+    res.status(500).json({ erro: e.message });
+  }
+});
+
+// Geocodificação reversa via backend (usa OPENCAGE_KEY do ambiente)
+app.get('/geocode/reverse', async (req, res) => {
+  const lat = String(req.query.lat ?? '').trim();
+  const lon = String(req.query.lon ?? '').trim();
+  const KEY = process.env.OPENCAGE_KEY;
+
+  if (!lat || !lon) {
+    return res.status(400).json({ erro: 'Parâmetros lat e lon são obrigatórios.' });
+  }
+  if (!KEY) {
+    return res.status(500).json({ erro: 'OPENCAGE_KEY não configurada no servidor.' });
+  }
+
+  try {
+    const url = `https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(lat)}+${encodeURIComponent(lon)}&key=${KEY}&pretty=0&no_annotations=1`;
+    const r = await fetch(url);
+    if (!r.ok) {
+      return res.status(502).json({ erro: `OpenCage HTTP ${r.status}` });
+    }
+    const j = await r.json();
+    const first = j?.results?.[0];
+
+    return res.json({
+      formatted: first?.formatted || `${Number(lat).toFixed(4)}, ${Number(lon).toFixed(4)}`,
+      components: first?.components || null,
+    });
+  } catch (e) {
+    console.error('Reverse geocode error:', e);
+    return res.status(500).json({ erro: 'Falha ao geocodificar reverso.' });
+  }
+});
+
+// ---------------------------------------------------------------------
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
+});
