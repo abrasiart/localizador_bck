@@ -1,4 +1,8 @@
-﻿id;nome; volume ; em_destaque ;imagem_url
+﻿id;nome; volume ; em_destaque ;imagem_url;produto_url
+91801; PISTACHE MINI PREMIUM; 150 ML; TRUE; https://paviloche.com.br/wp-content/uploads/2025/08/Pistache_site.webp; https://paviloche.com.br/produtos/mini-premium-pistache/
+91803; DOCE DE LEITE MINI PREMIUM;150 ML; TRUE;https://paviloche.com.br/wp-content/uploads/2025/08/decsv.webp;https://paviloche.com.br/produtos/minipremium-doce-de-leite/
+91802; IOGURTE COM AMARENA MINI PREMIUM; TRUE; https://paviloche.com.br/wp-content/uploads/2025/08/xcvxz1_iogurte.webp;https://paviloche.com.br/produtos/minipremium-iogurte-com-amarena/
+91800; PROFITEROLES MINI PREMIUM;TRUE;https://paviloche.com.br/wp-content/uploads/2025/08/Profiteroles_diagonal_sem_fundo.webp;https://paviloche.com.br/produtos/mini-premium-profiteroles/
 91716;BANANA CARAMELIZADA EDIÇÃO LTDA ; 1 L ; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/Paviloche_ed.png.webp;https://paviloche.com.br/produtos/banana-caramelizada/
 91718; PASSAS AO RUM EDIÇÃO LTDA ; 1 L ; FALSE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/Paviloche_ed-1.png.webp;https://paviloche.com.br/produtos/passas-ao-rum-2/
 91715;COCO EDIÇÃO LTDA ; 1 L ; TRUE ;https://paviloche.com.br/wp-content/webp-express/webp-images/uploads/2024/01/Paviloche_ed.limitada_coco-1.png.webp;https://paviloche.com.br/produtos/coco/
