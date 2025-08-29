@@ -16,25 +16,23 @@ app.use(express.json());
 // ---------------------------------------------------------------------
 const CSV_SEP = ';';
 
-// normaliza chaves/valores de uma linha do CSV
-function normalizeRow(row) {
-  const out = {};
-  for (const [k, v] of Object.entries(row)) {
-    let key = String(k).trim().toLowerCase();
-    key = key.replace(/^\uFEFF/, ''); // remove BOM se houver
-    out[key] = typeof v === 'string' ? v.trim() : v;
-  }
-  return out;
-}
-
+// boolean + número
 function toBool(x) {
   const v = String(x ?? '').trim().toLowerCase();
-  return v === 'true' || v === '1' || v === 'sim' || v === 'yes';
+  return v === 'true' || v === '1' || v === 't' || v === 'sim' || v === 'yes';
 }
 
 function toNum(x) {
   if (x == null) return NaN;
   return parseFloat(String(x).replace(',', '.'));
+}
+
+// mapeia possíveis nomes de coluna para uma única chave canônica
+function pick(obj, keys) {
+  for (const k of keys) {
+    if (obj[k] != null && obj[k] !== '') return obj[k];
+  }
+  return undefined;
 }
 
 function calculateDistance(lat1, lon1, lat2, lon2) {
@@ -51,7 +49,6 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 
 // ---------------------------------------------------------------------
 // Caminhos dos arquivos CSV
-// (estão na raiz do projeto no Railway)
 // ---------------------------------------------------------------------
 const PRODUCTS_FILE = path.join(__dirname, 'produtos.csv');
 const PDVS_FILE = path.join(__dirname, 'pontos_de_venda_final.csv');
@@ -60,20 +57,32 @@ const PDV_PROD_FILE = path.join(__dirname, 'pdv_produtos_filtrado_final.csv');
 // ---------------------------------------------------------------------
 // Leitura dos CSVs
 // ---------------------------------------------------------------------
+// Leitura ROBUSTA dos produtos (normaliza cabeçalhos e valores)
 function loadProductsCsv() {
   return new Promise((resolve, reject) => {
     const items = [];
     fs.createReadStream(PRODUCTS_FILE)
-      .pipe(csv({ separator: CSV_SEP }))
-      .on('data', raw => {
-        const r = normalizeRow(raw);
+      .pipe(csv({
+        separator: CSV_SEP,
+        mapHeaders: ({ header }) => String(header).trim().toLowerCase().replace(/^\uFEFF/, ''),
+        mapValues: ({ value }) => (typeof value === 'string' ? value.trim() : value),
+      }))
+      .on('data', (row) => {
+        // aceita variações de nomes
+        const id           = pick(row, ['id', 'produto_id']);
+        const nome         = pick(row, ['nome', 'produto', 'produto_nome']);
+        const volume       = pick(row, ['volume', 'tamanho', 'peso']) || '';
+        const emDestaqueV  = pick(row, ['em_destaque', 'em destaque', 'destaque', 'em-destaque']);
+        const imagemUrl    = pick(row, ['imagem_url', 'imagem', 'image_url', 'img']);
+        const produtoUrl   = pick(row, ['produto_url', 'url', 'link', 'page_url']) || null;
+
         items.push({
-          id: r.id,
-          nome: r.nome,
-          volume: r.volume || '',
-          em_destaque: toBool(r['em_destaque']),
-          imagem_url: r['imagem_url'],
-          produto_url: r['produto_url'] || null,
+          id,
+          nome,
+          volume,
+          em_destaque: toBool(emDestaqueV),
+          imagem_url: imagemUrl,
+          produto_url: produtoUrl,
         });
       })
       .on('end', () => resolve(items))
@@ -85,9 +94,13 @@ function loadPdvsMap() {
   return new Promise((resolve, reject) => {
     const map = new Map();
     fs.createReadStream(PDVS_FILE)
-      .pipe(csv({ separator: CSV_SEP, mapHeaders: ({ header }) => header.trim() }))
+      .pipe(csv({
+        separator: CSV_SEP,
+        mapHeaders: ({ header }) => String(header).trim().toLowerCase().replace(/^\uFEFF/, ''),
+        mapValues: ({ value }) => (typeof value === 'string' ? value.trim() : value),
+      }))
       .on('data', (row) => {
-        const id = String(row.id ?? row.pdv_id ?? '').trim();
+        const id = String(pick(row, ['id', 'pdv_id']) ?? '').trim();
         if (!id) return;
         const lat = toNum(row.latitude);
         const lon = toNum(row.longitude);
@@ -112,12 +125,20 @@ function loadPdvsMap() {
 // Healthcheck
 app.get('/health', (_, res) => res.json({ ok: true }));
 
-// Produtos em destaque
+// Produtos em destaque (sem limite por padrão; aceita ?limit=5 se quiser)
 app.get('/produtos/destaque', async (req, res) => {
   try {
+    const limit = Number(req.query.limit);
     const all = await loadProductsCsv();
-    const destacados = all.filter(p => p.em_destaque);
-    return res.json(destacados); // <- AQUI estava o bug: retornava "destaques"
+
+    let destacados = all.filter((p) => p.em_destaque === true);
+
+    // (opcional) permitir limitar via querystring
+    if (Number.isFinite(limit) && limit > 0) {
+      destacados = destacados.slice(0, limit);
+    }
+
+    return res.json(destacados);
   } catch (e) {
     console.error('Erro /produtos/destaque:', e);
     return res.status(500).json({ erro: 'Falha ao ler produtos.' });
@@ -154,14 +175,18 @@ app.get('/pdvs/proximos', async (req, res) => {
 
     const out = [];
     fs.createReadStream(PDVS_FILE)
-      .pipe(csv({ separator: CSV_SEP, mapHeaders: ({ header }) => header.trim() }))
+      .pipe(csv({
+        separator: CSV_SEP,
+        mapHeaders: ({ header }) => String(header).trim().toLowerCase().replace(/^\uFEFF/, ''),
+        mapValues: ({ value }) => (typeof value === 'string' ? value.trim() : value),
+      }))
       .on('data', (row) => {
         const lat = toNum(row.latitude);
         const lon = toNum(row.longitude);
         if (isFinite(lat) && isFinite(lon)) {
           const distancia = calculateDistance(userLat, userLon, lat, lon);
           out.push({
-            id: String(row.id ?? row.pdv_id ?? '').trim(),
+            id: String(pick(row, ['id', 'pdv_id']) ?? '').trim(),
             nome: (row.nome ?? '').trim(),
             cep: (row.cep ?? '').trim(),
             endereco: (row.endereco ?? '').trim(),
@@ -192,14 +217,18 @@ app.get('/pdvs/proximos/coords', (req, res) => {
 
   const out = [];
   fs.createReadStream(PDVS_FILE)
-    .pipe(csv({ separator: CSV_SEP, mapHeaders: ({ header }) => header.trim() }))
+    .pipe(csv({
+      separator: CSV_SEP,
+      mapHeaders: ({ header }) => String(header).trim().toLowerCase().replace(/^\uFEFF/, ''),
+      mapValues: ({ value }) => (typeof value === 'string' ? value.trim() : value),
+    }))
     .on('data', (row) => {
       const lat = toNum(row.latitude);
       const lon = toNum(row.longitude);
       if (isFinite(lat) && isFinite(lon)) {
         const distancia = calculateDistance(userLat, userLon, lat, lon);
         out.push({
-          id: String(row.id ?? row.pdv_id ?? '').trim(),
+          id: String(pick(row, ['id', 'pdv_id']) ?? '').trim(),
           nome: (row.nome ?? '').trim(),
           cep: (row.cep ?? '').trim(),
           endereco: (row.endereco ?? '').trim(),
@@ -238,12 +267,16 @@ app.get('/pdvs/proximos/produto', async (req, res) => {
     const out = [];
 
     fs.createReadStream(PDV_PROD_FILE)
-      .pipe(csv({ separator: CSV_SEP, mapHeaders: ({ header }) => header.trim() }))
+      .pipe(csv({
+        separator: CSV_SEP,
+        mapHeaders: ({ header }) => String(header).trim().toLowerCase().replace(/^\uFEFF/, ''),
+        mapValues: ({ value }) => (typeof value === 'string' ? value.trim() : value),
+      }))
       .on('data', (row) => {
         const pid = String(row.produto_id ?? '').trim();
         if (!candidates.has(pid)) return;
 
-        const pdvId = String(row.pdv_id ?? row.id ?? '').trim();
+        const pdvId = String(pick(row, ['pdv_id', 'id']) ?? '').trim();
         const pdv = pdvMap.get(pdvId);
         if (!pdv) return;
 
