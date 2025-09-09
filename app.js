@@ -312,7 +312,8 @@ app.get('/pdvs/proximos/coords', async (req, res) => {
 });
 
 // PDVs por produto + coordenadas do usuário
-app.get('/pdvs/proximos/produto', async (req, res) => {
+// Coloque isso no app.js, substituindo a rota acima por esta versão:
+const produtoHandler = async (req, res) => {
   const productIdRaw = String(req.query.productId ?? '').trim();
   const userLat = toNum(req.query.lat);
   const userLon = toNum(req.query.lon);
@@ -321,7 +322,6 @@ app.get('/pdvs/proximos/produto', async (req, res) => {
     return res.status(400).json({ erro: 'Parâmetros inválidos.' });
   }
 
-  // candidatos 9xxxx <-> 0xxxx
   const candidates = new Set([productIdRaw]);
   if (/^\d{5}$/.test(productIdRaw)) {
     if (productIdRaw.startsWith('9')) candidates.add('0' + productIdRaw.slice(1));
@@ -329,27 +329,30 @@ app.get('/pdvs/proximos/produto', async (req, res) => {
   }
 
   try {
-    const pdvMap = await loadPdvsMap(); // já com lat/lon via geocode
+    const pdvMap = await loadPdvsMap();
     const out = [];
 
     fs.createReadStream(PDV_PROD_FILE)
-      .pipe(csv({ separator: CSV_SEP }))
+      .pipe(csv({ separator: ';', mapHeaders: ({ header }) => header.trim() })))
       .on('data', (row) => {
-        const prodId = String(row.produto_id ?? '').trim();
-        if (!candidates.has(prodId)) return;
+        const pid = String(row.produto_id ?? '').trim();
+        if (!candidates.has(pid)) return;
 
         const pdvId = String(row.pdv_id ?? row.id ?? '').trim();
         const pdv = pdvMap.get(pdvId);
         if (!pdv) return;
 
-        const distancia = calculateDistance(userLat, userLon, pdv.latitude, pdv.longitude);
+        const { latitude, longitude } = pdv;
+        if (!isFinite(latitude) || !isFinite(longitude)) return;
+
+        const distancia = calculateDistance(userLat, userLon, latitude, longitude);
         out.push({
           id: pdv.id,
           nome: pdv.nome,
-          cep: pdv.cep || '',
+          cep: pdv.cep,
           endereco: pdv.endereco,
-          latitude: pdv.latitude,
-          longitude: pdv.longitude,
+          latitude,
+          longitude,
           distancia_km: +distancia.toFixed(2),
         });
       })
@@ -359,10 +362,15 @@ app.get('/pdvs/proximos/produto', async (req, res) => {
       })
       .on('error', (e) => res.status(500).json({ erro: e.message }));
   } catch (e) {
-    console.error('Erro /pdvs/proximos/produto:', e);
+    console.error('Erro produtoHandler:', e);
     res.status(500).json({ erro: e.message });
   }
-});
+};
+
+// Aceita o caminho novo **e** o legado
+app.get('/pdvs/proximos/produto', produtoHandler);
+app.get('/produto', produtoHandler); // <-- compatibilidade com o front antigo
+
 
 // Geocodificação reversa (endereço do usuário) — permanece igual
 app.get('/geocode/reverse', async (req, res) => {
