@@ -2,7 +2,7 @@ const path = require('path');
 const fs = require('fs');
 
 // Caminhos dos CSVs (MESMA PASTA do server.js)
-const storesCsvPath      = path.join(__dirname, 'pontos_de_venda_final.csv');
+const storesCsvPath      = path.join(__dirname, 'pdvs_final.csv');
 const productsCsvPath    = path.join(__dirname, 'produtos.csv');
 const pdvProductsCsvPath = path.join(__dirname, 'pdv_produtos_filtrado_final.csv');
 
