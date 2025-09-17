@@ -1,16 +1,16 @@
 {
   "name": "localizador-backend",
   "version": "1.0.0",
+  "private": true,
   "type": "commonjs",
+  "engines": { "node": ">=18 <23" },
   "scripts": {
     "start": "node server.js",
-    "warm": "node warm_geocode.js"
+    "dev": "node --watch server.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
     "csv-parser": "^3.0.0",
-    "express": "^4.19.2",
-    "node-fetch": "^2.6.12"
+    "express": "^4.19.2"
   }
 }
-
