@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "type": "commonjs",
   "scripts": {
-    "start": "node app.js",
+    "start": "node server.js",
     "warm": "node warm_geocode.js"
   },
   "dependencies": {
@@ -13,3 +13,4 @@
     "node-fetch": "^2.6.12"
   }
 }
+
