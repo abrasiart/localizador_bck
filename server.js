@@ -17,4 +17,4 @@ function ensureFileOrWarn(filePath, name) {
 }
 ensureFileOrWarn(productsCsvPath, 'produtos.csv');
 ensureFileOrWarn(pdvProductsCsvPath, 'pdv_produtos_filtrado_final.csv');
-ensureFileOrWarn(storesCsvPath, 'pontos_de_venda_final.csv');
+ensureFileOrWarn(storesCsvPath, 'pdvs_final.csv');
